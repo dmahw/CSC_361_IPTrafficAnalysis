@@ -26,13 +26,15 @@ def linux_workflow(eth):
     ip = eth.data
     if ip.p == dpkt.ip.IP_PROTO_UDP:
         udp = ip.data
-        print("UDP Packet")
-        trace.src_pkts.append(eth)
-        
-        print("Time to live: " + str(ip.ttl))
-        
-        # print(trace.src_pkts[0].data.ttl)
-        # print(trace.src_pkts[0].data.data.sport)
+        if udp.dport >= 33434 and udp.dport <= 33534:
+            for packet in trace.src_pkts:
+                if udp.dport == packet.data.data.dport:
+                    return 0
+            trace.src_pkts.append(eth)
+    elif ip.p == dpkt.ip.IP_PROTO_ICMP:
+        icmp = ip.data
+        udp = icmp.dport
+        print(udp.sport)
     else:
         return 0
 
@@ -49,21 +51,19 @@ def get_first_packet(eth):
         udp = ip.data
         if FIRST_PACKET == 0:
             if ip.ttl == 1:
-                FIRST_PACKET = 1
-                TYPE = TYPE_LINUX
-                print("Traceroute is Linux Type")
-                trace.src_pkts.append(eth)
-                
-                trace.src_ip = ipAddress(ip.src)
-                trace.dst_ip = ipAddress(ip.dst)
-                print("Source IP: " + trace.src_ip)
-                print("Destination IP: " + trace.dst_ip)
-                print("Time to live: " + str(ip.ttl))
-                print("UDP Checksum: " + str(udp.sum))
-                
-                # print(trace.src_pkts[0].data.ttl)
-                # print(trace.src_pkts[0].data.data.sport)
-                return 1
+                if udp.dport >= 33434 and udp.dport <= 33534:
+                    FIRST_PACKET = 1
+                    TYPE = TYPE_LINUX
+                    print("Traceroute is Linux Type")
+                    trace.src_pkts.append(eth)
+                    
+                    trace.src_ip = ipAddress(ip.src)
+                    trace.dst_ip = ipAddress(ip.dst)
+                    print("Source IP: " + trace.src_ip)
+                    print("Destination IP: " + trace.dst_ip)
+                    print("Time to live: " + str(ip.ttl))
+
+                    return 1
             else:
                 return 0
 
@@ -89,7 +89,7 @@ def main():
 
     for timeStamp, buf in tracePcap:
         count = count + 1
-        if count >= 19:
+        if count >= 50:
             break
         print("\n********** Packet " + str(count) + " **********")
 
