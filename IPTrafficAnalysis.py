@@ -14,6 +14,8 @@ class Trace:
     num_frags = 0
     off_frags = 0
     src_pkts = []
+    src_ff = []
+    src_mf = []
 
 def mac_addr(address):      #Refer to Reference                     #Used to convert binary to mac addresses
     return ":".join("%02x" % compat_ord(b) for b in address)
@@ -71,14 +73,23 @@ def list_routers():
 def linux_workflow(eth):
     global trace
     ip = eth.data
+    for packet in trace.src_pkts:
+        print(repr(packet))
+        if ip.id == packet.data.id:
+            
+            print(packet.data.off & dpkt.ip.IP_MF)
+
     if ip.p == dpkt.ip.IP_PROTO_UDP:
         udp = ip.data
         if udp.dport >= 33434 and udp.dport <= 33534:
             for packet in trace.src_pkts:
                 if udp.dport == packet.data.data.dport:
                     return 0
-            trace.src_pkts.append(eth)
-            add_proto(eth)
+                if packet.data.off & dpkt.ip.IP_MF == 0x2000:
+                    trace.src_ff.append(eth)
+                else:
+                    trace.src_pkts.append(eth)
+                    add_proto(eth)
             print("LINUX ECHO")
             return 1
 
