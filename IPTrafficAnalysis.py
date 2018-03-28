@@ -9,7 +9,7 @@ FIRST_PACKET = 0
 class Trace:
     src_ip = 0
     dst_ip = 0
-    rtr_ip = []
+    rtr = []
     proto = []
     num_frags = 0
     off_frags = 0
@@ -18,7 +18,7 @@ class Trace:
 def mac_addr(address):      #Refer to Reference                     #Used to convert binary to mac addresses
     return ":".join("%02x" % compat_ord(b) for b in address)
 
-def ipAddress(inet):      #Refer to Reference                     #Used to convert binary to Ip Addresses
+def ip_address(inet):      #Refer to Reference                     #Used to convert binary to Ip Addresses
     return socket.inet_ntop(socket.AF_INET, inet)
 
 def linux_workflow(eth):
@@ -33,12 +33,20 @@ def linux_workflow(eth):
             trace.src_pkts.append(eth)
     elif ip.p == dpkt.ip.IP_PROTO_ICMP:
         icmp = ip.data
-        udp = icmp.dport
-        print(udp.sport)
+        icmp_stat = icmp.data
+        ip_old = icmp_stat.data
+        udp_old = ip_old.data
+        if udp_old.dport >= 33434 and udp_old.dport <= 33534:
+            for packet in trace.src_pkts:
+                if udp_old.dport == packet.data.data.dport:
+                    trace.rtr.append(eth)
+                    print("TTL EXCEEDED FOUND")
+                    print(ip_address(ip.src))
     else:
         return 0
 
 def window_workflow(eth):
+    
     return 0
 
 def get_first_packet(eth):
@@ -57,12 +65,11 @@ def get_first_packet(eth):
                     print("Traceroute is Linux Type")
                     trace.src_pkts.append(eth)
                     
-                    trace.src_ip = ipAddress(ip.src)
-                    trace.dst_ip = ipAddress(ip.dst)
+                    trace.src_ip = ip_address(ip.src)
+                    trace.dst_ip = ip_address(ip.dst)
                     print("Source IP: " + trace.src_ip)
                     print("Destination IP: " + trace.dst_ip)
                     print("Time to live: " + str(ip.ttl))
-
                     return 1
             else:
                 return 0
@@ -73,7 +80,15 @@ def get_first_packet(eth):
             if ip.ttl == 1:
                 FIRST_PACKET = 1
                 TYPE = TYPE_WINDOW
+                
+                trace.src_ip = ip_address(ip.src)
+                trace.dst_ip = ip_address(ip.dst)
+
                 print("Traceroute is Windows Type")
+                print("Source IP: " + trace.src_ip)
+                print("Destination IP: " + trace.dst_ip)
+                print("Time to live: " + str(ip.ttl))
+                trace.src_pkts.append(eth)
             else:
                 return 0
     return 0
@@ -89,7 +104,7 @@ def main():
 
     for timeStamp, buf in tracePcap:
         count = count + 1
-        if count >= 50:
+        if count >= 10:
             break
         print("\n********** Packet " + str(count) + " **********")
 
@@ -105,8 +120,8 @@ def main():
         elif TYPE == TYPE_WINDOW:
             window_workflow(eth)   
 
-        # src_ip = ipAddress(ip.src)
-        # dst_ip = ipAddress(ip.dst)
+        # src_ip = ip_address(ip.src)
+        # dst_ip = ip_address(ip.dst)
         # print("\nPacket:" + str(count))
         # print(src_ip)
         # print(dst_ip)
