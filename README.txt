@@ -17,3 +17,4 @@ Steps to Run
     a. Have the pcap file or file the analyze in the same folder
 2. Run (without "" or [])
     "python3 IPTrafficAnalysis.py [pcapng file]"
+    
