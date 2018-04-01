@@ -14,7 +14,6 @@ Requirements
 Steps to Run
 *****************************
 1. In the folder with TCPTrafficAnalysis.py
-    a. Have the pcap file or file the analyze in the same folder
+    a. Have the pcapng file in the same folder
 2. Run (without "" or [])
     "python3 IPTrafficAnalysis.py [pcapng file]"
-    
