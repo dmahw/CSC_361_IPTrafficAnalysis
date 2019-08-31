@@ -4,6 +4,9 @@ CSC 361 IP Traffic Analysis
 ## Author
 David Mah
 
+## Description
+This program was developed as a solution to the specification document, p3-2018Spring.pdf.
+
 ## Requirements
 1. Must be using Python 3
 2. pip3 must be installed to perform step 3
